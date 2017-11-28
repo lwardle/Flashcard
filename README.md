@@ -1,5 +1,6 @@
 # Flashcard
 A simple python 3.6.3 flashcard manager
+
 Author: Lawrence Wardle
 
 This is a small first project for the purpose of:
