@@ -14,10 +14,17 @@ The educational value of this simple program is in the way it manages the flashc
 This program will be a small improvement over the Leitner system. The Leitner system reviews whole boxes at a time out of necessity; it is a system designed for physical flashcards. This program can iterate over flashcards individually, marking them for review based on the time they entered their current box.
 
 Additional features to put in later:
+
   Ability to tag cards and ability to sort by tag
+  
   Statistics about individual flashcards and overall performance
+  
   Allow image/sound input for flashcards
+  
   Allow for multi-sided flashcards
+  
   Allow for reversible flashcards
+  
   Nicer GUI and animated graphics
+  
   Make into a mobile app
