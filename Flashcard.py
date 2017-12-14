@@ -11,24 +11,11 @@ class Flash_Card(object):
         self.location = 0 #refers to index location of current box within all_boxes
         self.review_flag = True #cards are created with the last review set as the date of creation, but the review flag on.
         self.last_review = datetime.datetime.now()
-
-    def markRight(self):
-        self.review_flag = False
-        self.last_review = datetime.datetime.now()
-        if len(all_boxes) > (self.location + 1):
-            self.location += 1
-
-    def markWrong(self):
-        print("We'll send that back to box one so you can practice it tomorrow.")
-        self.review_flag = False
-        self.last_review = datetime.datetime.now()
-        self.location = 0
-
+    
 class Box(object):
     def __init__(self, name, review_delay):
         self.name = name
         self.review_delay = datetime.timedelta(days=review_delay)
-        self.contents = None
 
     def assignReviewDate(self):
         pass
@@ -52,7 +39,7 @@ def saveFunction(save_window):
 
 def loadPrompt():
     load_window = Toplevel()
-    warning = Label(load_window, text = "Are you sure you want to save?\nThis will overwrite existing data.")
+    warning = Label(load_window, text = "Are you sure you want to load?\nThis will discard the current data.")
     affirm_button = Button(load_window, text = "Yes", command = lambda: loadFunction(load_window))
     cancel_button = Button(load_window, text = "No", command = lambda: load_window.destroy())
 
@@ -65,6 +52,7 @@ def loadFunction(load_window):
     try:
         pickle_in = open("flashcard_data.pickle", "rb")
         all_cards = pickle.load(pickle_in)
+        generateStack()
     except:
         load_error_window = Toplevel()
         error_message = Label(load_error_window, wraplength = 200, text = "I couldn't load your cards properly. Just a guess: is there a 'flashcard_data.pickle' file in the same folder as the flashcard app? There should be.")
@@ -75,30 +63,71 @@ def loadFunction(load_window):
     load_window.destroy()
 
 #TODO: button functions
+def markCorrect():
+    if len(study_stack) == 0:
+        return
+    study_stack[0].review_flag = False
+    study_stack[0].location += 1
+    card_back.config(text = "")
+    study_stack[0].last_review = datetime.datetime.now()
+    study_stack.remove(study_stack[0])
+    if len(study_stack) == 0:
+        card_back.config(text = "")
+        card_front.config(text = "Congrats! You're done for today!")
+        return
+    new_prompt = study_stack[0].side_1
+    card_front.config(text = new_prompt)
 
-"""
+def markIncorrect():
+    if len(study_stack) == 0:
+        return
+    study_stack[0].review_flag = False
+    study_stack[0].location = 0
+    card_back.config(text = "")
+    study_stack[0].last_review = datetime.datetime.now()
+    study_stack.remove(study_stack[0])
+    if len(study_stack) == 0:
+        card_back.config(text = "")
+        card_front.config(text = "Congrats! You're done for today!")
+        return
+    new_prompt = study_stack[0].side_1
+    card_front.config(text = new_prompt)
 
-generateStack():
-	pull all cards that have review_flag = True
+def showAnswer():
+    if len(study_stack) == 0:
+        return
+    new_text = study_stack[0].side_2
+    card_back.config(text = new_text)
 
-showAnswer():
-	change card_back to current card's response
+def setReviewFlags():
+    for card in all_cards:
+        review_delay = all_boxes[card.location].review_delay
+        last_review = card.last_review
+        if last_review + review_delay < datetime.datetime.now():
+            card.review_flag = True
 
-markCorrect():
-	set current card's review flag to false
-	change current card's location to location + 1
-	set card_back to an empty string
-	remove current card from study stack
-	change card_front to new card's prompt
+def deleteCard(window, card):
+    all_cards.remove(card)
+    study_stack.remove(card)
+    window.destroy()
+    card_back.config(text = "")
+    if len(study_stack) == 0:
+        card_front.config(text = "Congrats! You're done for today!")
+        return
+    else:
+        new_prompt = study_stack[0].side_1
+        card_front.config(text = new_prompt)
+        return
 
-markIncorrect():
-	set current card's review flag to false
-	change current card's location to 0
-	set card_back to an empty string
-	remove current card from study stack
-	change card_front to new card's prompt
-
-"""
+def generateStack():
+    global study_stack
+    setReviewFlags()
+    for card in all_cards:
+        if card.review_flag == True:
+            study_stack.append(card)
+    random.shuffle(study_stack)
+    new_prompt = study_stack[0].side_1
+    card_front.config(text = new_prompt)
 
 def finalizeCard(card_prompt, card_response, creation_window):
     new_card = Flash_Card(card_prompt.get(), card_response.get())
@@ -117,15 +146,15 @@ def creationPopup():
 
     side_one_prompt.grid(row = 0, column = 0)
     side_two_prompt.grid(row = 1, column = 0)
-    side_one_entry.grid(row = 0, column = 1)
-    side_two_entry.grid(row = 1, column = 1)
+    side_one_entry.grid(row = 0, column = 1, columnspan = 3)
+    side_two_entry.grid(row = 1, column = 1, columnspan = 3)
     finalize_button.grid(row = 2, column = 0, columnspan = 2)
 
 def deletionPopup():
     deletion_window = Toplevel()
     warning = Label(deletion_window, text = "Are you sure?")
-    affirm_button = Button(deletion_window, text = "Yes", command = None)
-    cancel_button = Button(deletion_window, text = "No", command = None)
+    affirm_button = Button(deletion_window, text = "Yes", command = lambda: deleteCard(deletion_window, study_stack[0]))
+    cancel_button = Button(deletion_window, text = "No", command = lambda: deletion_window.destroy())
 
     warning.grid(row = 0, column = 0, columnspan = 2, padx = 20, pady = 10)
     affirm_button.grid(row = 1, column = 0)
@@ -141,11 +170,11 @@ study_stack = []
 index_card_image = PhotoImage(file = os.path.abspath(".") + "\index_card.gif")
 
 #TODO: create GUI elements
-card_front = Label(root, text = "In what year did Colombus set sail for the Americas?", wraplength = 350, font = ("Arial", 24, "bold"), image = index_card_image, compound = CENTER)
-card_back = Label(root, text = "1492", wraplength = 350, font = ("Arial", 24, "bold"), image = index_card_image, compound = CENTER)
-mark_right = Button(root, text = "Mark Correct")
-mark_wrong = Button(root, text = "Mark Incorrect")
-show_answer = Button(root, text = "Show Answer")
+card_front = Label(root, text = "", wraplength = 350, font = ("Arial", 24, "bold"), image = index_card_image, compound = CENTER)
+card_back = Label(root, text = "", wraplength = 350, font = ("Arial", 24, "bold"), image = index_card_image, compound = CENTER)
+mark_right = Button(root, text = "Mark Correct", command = markCorrect)
+mark_wrong = Button(root, text = "Mark Incorrect", command = markIncorrect)
+show_answer = Button(root, text = "Show Answer", command = showAnswer)
 create_new_card = Button(root, text = "Create New Card", command = creationPopup)
 cards_left = Label(root, text = "Number of cards left:")
 total_cards = Label(root, text = "Total number of cards:")
