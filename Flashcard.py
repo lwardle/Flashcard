@@ -53,14 +53,16 @@ def loadFunction(load_window):
         pickle_in = open("flashcard_data.pickle", "rb")
         all_cards = pickle.load(pickle_in)
         generateStack()
+        cards_left_count.set(len(study_stack))
+        cards_total_count.set(len(all_cards))
     except:
         load_error_window = Toplevel()
         error_message = Label(load_error_window, wraplength = 200, text = "I couldn't load your cards properly. Just a guess: is there a 'flashcard_data.pickle' file in the same folder as the flashcard app? There should be.")
         okay_button = Button(load_error_window, text = "Okay", command = lambda: load_error_window.destroy())
-
         error_message.pack()
         okay_button.pack()
     load_window.destroy()
+    
 
 #TODO: button functions
 def markCorrect():
@@ -71,8 +73,9 @@ def markCorrect():
     card_back.config(text = "")
     study_stack[0].last_review = datetime.datetime.now()
     study_stack.remove(study_stack[0])
+    cards_left_count.set(len(study_stack))
     if len(study_stack) == 0:
-        card_back.config(text = "")
+        card_back.config(text = "Don't forget to save!")
         card_front.config(text = "Congrats! You're done for today!")
         return
     new_prompt = study_stack[0].side_1
@@ -81,13 +84,13 @@ def markCorrect():
 def markIncorrect():
     if len(study_stack) == 0:
         return
-    study_stack[0].review_flag = False
     study_stack[0].location = 0
     card_back.config(text = "")
     study_stack[0].last_review = datetime.datetime.now()
     study_stack.remove(study_stack[0])
+    cards_left_count.set(len(study_stack))
     if len(study_stack) == 0:
-        card_back.config(text = "")
+        card_back.config(text = "Don't forget to save!")
         card_front.config(text = "Congrats! You're done for today!")
         return
     new_prompt = study_stack[0].side_1
@@ -109,10 +112,13 @@ def setReviewFlags():
 def deleteCard(window, card):
     all_cards.remove(card)
     study_stack.remove(card)
+    cards_left_count.set(len(study_stack))
+    cards_total_count.set(len(all_cards))
     window.destroy()
     card_back.config(text = "")
     if len(study_stack) == 0:
         card_front.config(text = "Congrats! You're done for today!")
+        card_back.config(text = "Don't forget to save!")
         return
     else:
         new_prompt = study_stack[0].side_1
@@ -126,13 +132,26 @@ def generateStack():
         if card.review_flag == True:
             study_stack.append(card)
     random.shuffle(study_stack)
-    new_prompt = study_stack[0].side_1
-    card_front.config(text = new_prompt)
+    if len(study_stack) == 0:
+        card_front.config(text = "Congrats! You're done for today!")
+        card_back.config(text = "Don't forget to save!")
+        return
+    else:
+        new_prompt = study_stack[0].side_1
+        card_front.config(text = new_prompt)
+
+def flipStack():
+    for card in all_cards:
+        old_front = card.side_1
+        old_back = card.side_2
+        card.side_1 = old_back
+        card.side_2 = old_front
 
 def finalizeCard(card_prompt, card_response, creation_window):
     new_card = Flash_Card(card_prompt.get(), card_response.get())
     all_cards.append(new_card)
     creation_window.destroy()
+    cards_total_count.set(len(all_cards))
 
 def creationPopup():
     creation_window = Toplevel()
@@ -161,13 +180,20 @@ def deletionPopup():
     cancel_button.grid(row = 1, column = 1)
 
 #TODO: create variables
+
 all_boxes = []
+
 for i in range(1, 7):
     all_boxes.append(Box(i, (2 ** (i-1)) )) #creates boxes to be reviewed every 1|2|4|8|16|32 days
 
 all_cards = []
 study_stack = []
-index_card_image = PhotoImage(file = os.path.abspath(".") + "\index_card.gif")
+index_card_image = PhotoImage(file = "index_card.gif")
+
+cards_left_count = IntVar()
+cards_left_count.set(len(study_stack))
+cards_total_count = IntVar()
+cards_total_count.set(len(all_cards))
 
 #TODO: create GUI elements
 card_front = Label(root, text = "", wraplength = 350, font = ("Arial", 24, "bold"), image = index_card_image, compound = CENTER)
@@ -175,9 +201,12 @@ card_back = Label(root, text = "", wraplength = 350, font = ("Arial", 24, "bold"
 mark_right = Button(root, text = "Mark Correct", command = markCorrect)
 mark_wrong = Button(root, text = "Mark Incorrect", command = markIncorrect)
 show_answer = Button(root, text = "Show Answer", command = showAnswer)
+flip_stack = Button(root, text = "Flip Stack", command = flipStack)
 create_new_card = Button(root, text = "Create New Card", command = creationPopup)
 cards_left = Label(root, text = "Number of cards left:")
 total_cards = Label(root, text = "Total number of cards:")
+cards_left_counter = Label(root, textvariable = cards_left_count)
+total_cards_counter = Label(root, textvariable = cards_total_count)
 delete_card = Button(root, text = "Delete This Card", command = deletionPopup)
 save_button = Button(root, text = "Save", command = savePrompt)
 load_button = Button(root, text = "Load", command = loadPrompt)
@@ -187,11 +216,14 @@ card_front.grid(row = 0, column = 0, rowspan = 6)
 card_back.grid(row = 0, column = 1, rowspan = 6)
 delete_card.grid(row = 4, column = 3)
 create_new_card.grid(row = 4, column = 2)
-cards_left.grid(row = 2, column = 2, columnspan = 2)
-show_answer.grid(row = 0, column = 2, columnspan = 2)
+cards_left.grid(row = 2, column = 2)
+show_answer.grid(row = 0, column = 2)
+flip_stack.grid(row = 0, column = 3)
+cards_left_counter.grid(row = 2, column = 3)
+total_cards_counter.grid(row = 3, column = 3)
 mark_right.grid(row = 1, column = 2)
 mark_wrong.grid(row = 1, column = 3)
-total_cards.grid(row = 3, column = 2, columnspan = 2)
+total_cards.grid(row = 3, column = 2)
 save_button.grid(row = 5, column = 2)
 load_button.grid(row = 5, column = 3)
 
