@@ -1,4 +1,5 @@
 import pickle, datetime, random, os
+from tkinter import filedialog
 from tkinter import *
 
 root = Tk()
@@ -21,21 +22,10 @@ class Box(object):
         pass
     
 #TODO: save/load functions
-def savePrompt():
-    save_window = Toplevel()
-    warning = Label(save_window, text = "Are you sure you want to save?\nThis will overwrite existing data.")
-    affirm_button = Button(save_window, text = "Yes", command = lambda: saveFunction(save_window))
-    cancel_button = Button(save_window, text = "No", command = lambda: save_window.destroy())
-
-    warning.grid(row = 0, column = 0, columnspan = 2, padx = 20, pady = 10)
-    affirm_button.grid(row = 1, column = 0)
-    cancel_button.grid(row = 1, column = 1)
-
-def saveFunction(save_window):
-    pickle_out = open("flashcard_data.pickle", "wb")
+def saveFunction():
+    pickle_out = open(filedialog.asksaveasfilename(initialdir = "/",title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*"))), "wb")
     pickle.dump(all_cards, pickle_out)
     pickle_out.close()
-    save_window.destroy()
 
 def loadPrompt():
     load_window = Toplevel()
@@ -49,20 +39,11 @@ def loadPrompt():
 
 def loadFunction(load_window):
     global all_cards
-    try:
-        pickle_in = open("flashcard_data.pickle", "rb")
-        all_cards = pickle.load(pickle_in)
-        generateStack()
-        cards_left_count.set(len(study_stack))
-        cards_total_count.set(len(all_cards))
-    except:
-        load_error_window = Toplevel()
-        error_message = Label(load_error_window, wraplength = 200, text = "I couldn't load your cards properly. Just a guess: is there a 'flashcard_data.pickle' file in the same folder as the flashcard app? There should be.")
-        okay_button = Button(load_error_window, text = "Okay", command = lambda: load_error_window.destroy())
-        error_message.pack()
-        okay_button.pack()
-    load_window.destroy()
-    
+    pickle_in = open(filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("PICKLE files","*.pickle"),("all files","*.*"))), "rb")
+    all_cards = pickle.load(pickle_in)
+    generateStack()
+    cards_left_count.set(len(study_stack))
+    cards_total_count.set(len(all_cards))
 
 #TODO: button functions
 def markCorrect():
@@ -188,7 +169,14 @@ for i in range(1, 7):
 
 all_cards = []
 study_stack = []
-index_card_image = PhotoImage(file = "index_card.gif")
+try:
+    index_card_image = PhotoImage(file = "index_card.gif")
+except:
+    image_failure_prompt = Toplevel()
+    warning = Label(image_failure_prompt, text = "I couldn't find index_card.gif. Could you please find it for me?")
+    warning.pack()
+    index_card_image = PhotoImage(file = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("GIF files","*.gif"),("all files","*.*"))))
+    image_failure_prompt.destroy()
 
 cards_left_count = IntVar()
 cards_left_count.set(len(study_stack))
@@ -208,7 +196,7 @@ total_cards = Label(root, text = "Total number of cards:")
 cards_left_counter = Label(root, textvariable = cards_left_count)
 total_cards_counter = Label(root, textvariable = cards_total_count)
 delete_card = Button(root, text = "Delete This Card", command = deletionPopup)
-save_button = Button(root, text = "Save", command = savePrompt)
+save_button = Button(root, text = "Save", command = saveFunction)
 load_button = Button(root, text = "Load", command = loadPrompt)
 
 #TODO: arrange GUI elements
