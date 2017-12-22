@@ -23,7 +23,7 @@ class Box(object):
     
 #TODO: save/load functions
 def saveFunction():
-    pickle_out = open(filedialog.asksaveasfilename(initialdir = "/",title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*"))), "wb")
+    pickle_out = open(filedialog.asksaveasfilename(initialdir = "/",title = "Select file",filetypes = (("PICKLE files","*.pickle"),("all files","*.*"))), "wb")
     pickle.dump(all_cards, pickle_out)
     pickle_out.close()
 
