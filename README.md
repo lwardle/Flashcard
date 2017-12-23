@@ -3,6 +3,8 @@ A simple python 3.6.3 flashcard manager
 
 Author: Lawrence Wardle
 
+**Purpose:**
+
 This is a small first project for the purpose of:
   1) Practicing relatively simple python code
   2) Creating a useful educational tool
@@ -13,7 +15,11 @@ The educational value of this simple program is in the way it manages the flashc
 
 This program will be a small improvement over the Leitner system. The Leitner system reviews whole boxes at a time out of necessity; it is a system designed for physical flashcards. This program can iterate over flashcards individually, marking them for review based on the time they entered their current box.
 
-Additional features to put in later:
+**Known Issues:**
+
+Trying to import a card from a .csv list will not work correctly if that card's response/prompt include a comma.
+
+**Additional features to put in later:**
 
   Ability to tag cards and ability to sort by tag
   
@@ -23,7 +29,7 @@ Additional features to put in later:
   
   Allow for multi-sided flashcards
   
-  Allow for reversible flashcards
+  ~~Allow for reversible flashcards~~ Accomplished!
   
   Nicer GUI and animated graphics
   
