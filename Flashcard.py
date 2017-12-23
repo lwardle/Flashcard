@@ -1,4 +1,4 @@
-import pickle, datetime, random, os
+import pickle, datetime, random, os, csv
 from tkinter import filedialog
 from tkinter import *
 
@@ -127,6 +127,7 @@ def flipStack():
         old_back = card.side_2
         card.side_1 = old_back
         card.side_2 = old_front
+    card_front.config(text = study_stack[0].side_1)
 
 def finalizeCard(card_prompt, card_response, creation_window):
     new_card = Flash_Card(card_prompt.get(), card_response.get())
@@ -159,6 +160,28 @@ def deletionPopup():
     warning.grid(row = 0, column = 0, columnspan = 2, padx = 20, pady = 10)
     affirm_button.grid(row = 1, column = 0)
     cancel_button.grid(row = 1, column = 1)
+
+def importCards():
+    incoming_cards_file = open(filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("TEXT files","*.txt"),("all files","*.*"))))
+    incoming_cards_reader = csv.reader(incoming_cards_file)
+    incoming_card_data = []
+    for row in incoming_cards_reader:
+        incoming_card_data.append(row)
+    for card in incoming_card_data:
+        all_cards.append(Flash_Card(card[0], card[1]))
+    generateStack()
+    cards_left_count.set(len(study_stack))
+    cards_total_count.set(len(all_cards))
+    
+def exportCards():
+    outputFile = open(filedialog.asksaveasfilename(initialdir = "/",title = "Select file",filetypes = (("TEXT files","*.txt"),("all files","*.*"))), 'w', newline='')
+    card_data = []
+    for card in all_cards:
+        card_data.append([card.side_1, card.side_2])
+    outputWriter = csv.writer(outputFile)
+    for card in card_data:
+        outputWriter.writerow(card)
+    outputFile.close()
 
 #TODO: create variables
 
@@ -198,6 +221,8 @@ total_cards_counter = Label(root, textvariable = cards_total_count)
 delete_card = Button(root, text = "Delete This Card", command = deletionPopup)
 save_button = Button(root, text = "Save", command = saveFunction)
 load_button = Button(root, text = "Load", command = loadPrompt)
+import_cards = Button(root, text = "Import Cards From .TXT File", command = importCards)
+export_cards = Button(root, text = "Export Cards To .TXT File", command = exportCards)
 
 #TODO: arrange GUI elements
 card_front.grid(row = 0, column = 0, rowspan = 6)
@@ -214,5 +239,7 @@ mark_wrong.grid(row = 1, column = 3)
 total_cards.grid(row = 3, column = 2)
 save_button.grid(row = 5, column = 2)
 load_button.grid(row = 5, column = 3)
+export_cards.grid(row = 6, column = 2)
+import_cards.grid(row = 6, column = 3)
 
 root.mainloop()
